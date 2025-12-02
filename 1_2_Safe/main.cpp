@@ -55,8 +55,14 @@ struct Safe
     {
         if ('L' == direction)
         {
-            if (steps > this->GetCurrentPosition())
+            if (steps >= this->GetCurrentPosition())
             {
+                cout << "0: " << this->GetZeroCounter() << ", " << this->GetCurrentPosition() << "L" << steps << "\n";
+                if (0 != this->GetCurrentPosition())
+                {
+                    this->zeroCounter += 1;
+                }
+                this->zeroCounter += std::abs((this->currentPosition - steps) / this->upperBound);
                 this->currentPosition = (((this->currentPosition - steps) % this->upperBound) + this->upperBound) % this->upperBound;
             }
             else
@@ -66,10 +72,16 @@ struct Safe
         }
         else if ('R' == direction)
         {
+            if (this->currentPosition + steps >= this->upperBound)
+            {
+                cout << "0: " << this->GetZeroCounter() << ", " << this->GetCurrentPosition() << "R" << steps << "\n";
+                this->zeroCounter += (this->currentPosition + steps) / this->upperBound;
+            }
             this->currentPosition = (this->currentPosition + steps) % this->upperBound;
         }
         else cout << "Wrong direction!!!\n";
-        if (0 == this->GetCurrentPosition()) { this->zeroCounter++; }
+        cout << "zeroCounter: " << zeroCounter << "\n";
+        // if (0 == this->GetCurrentPosition()) { this->zeroCounter++; }
     }
 
     void ParseInput(const std::vector<std::string> &input)
@@ -99,8 +111,8 @@ int main()
     
     std::filesystem::path cwd = std::filesystem::current_path().filename();
 
-    // string filename("example_input"); // 3
-    string filename("input"); // 1158
+    // string filename("../1_1_Safe/example_input"); // 6
+    string filename("../1_1_Safe/input"); // 6860
     ifstream input_file(filename);
 
     string line{};
