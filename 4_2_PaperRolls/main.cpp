@@ -55,9 +55,17 @@ struct GridNode
     {
         this->symbol = 'x';
     }
-    bool IsAccessable() const
+    void SetCleaned()
+    {
+        this->symbol = 'c';
+    }
+    bool IsAccessible() const
     {
         return this->symbol == 'x';
+    }
+    bool IsCleaned() const
+    {
+        return this->symbol == 'c';
     }
     bool IsARoll() const
     {
@@ -65,7 +73,7 @@ struct GridNode
     }
     bool IsEmpty() const
     {
-        return symbol == '.';
+        return symbol == '.' || symbol == 'c';
     }
     bool HasLeftNeighbourFree(size_t distance, size_t rolls = 0)
     {
@@ -224,6 +232,24 @@ struct Grid
         }
     }
 
+    void CleanAccessableGridNodes()
+    {
+        bool needCleaning = true;
+        while (needCleaning)
+        {
+            needCleaning = false;
+            this->SetAccessibility();
+            for (auto &el : allGridNodes)
+            {
+                if (el.IsAccessible()) 
+                {
+                    needCleaning = true;
+                    el.SetCleaned();
+                }
+            }
+        }
+    }
+
     void AddNodeToGridRow(const GridNode &node, GridRow &gridRow)
     {
         std::cout << "trying to add: " << node.symbol << ", x: " << node.x << ", y: " << node.y << "\n";
@@ -265,7 +291,16 @@ struct Grid
     {
         return std::accumulate(this->allGridNodes.cbegin(), this->allGridNodes.cend(), 0LL, [](long long sum, const GridNode &gridNode)
                                 {
-                                    long long val = gridNode.IsAccessable() ? 1 : 0;
+                                    long long val = gridNode.IsAccessible() ? 1 : 0;
+                                    // cout << val << "\n";
+                                    return sum + val;
+                                });
+    }
+    long long GetNumberOfAllCleanedGridNodes()
+    {
+        return std::accumulate(this->allGridNodes.cbegin(), this->allGridNodes.cend(), 0LL, [](long long sum, const GridNode &gridNode)
+                                {
+                                    long long val = gridNode.IsCleaned() ? 1 : 0;
                                     // cout << val << "\n";
                                     return sum + val;
                                 });
@@ -335,8 +370,8 @@ int main()
     
     std::filesystem::path cwd = std::filesystem::current_path().filename();
 
-    // string filename("example_input"); // 13
-    string filename("input"); // 1397
+    // string filename("../4_1_PaperRolls/example_input"); // 43
+    string filename("../4_1_PaperRolls/input"); // 8758
 
     std::vector<std::string> lines{};
     Helper::ParseFile(filename, lines);
@@ -344,10 +379,12 @@ int main()
     Grid grid{};
     grid.ParseInput(lines);
     std::cout << Grid::ToString(grid.allGridNodes) << "\n";
-    grid.SetAccessibility();
+    // grid.SetAccessibility();
+    grid.CleanAccessableGridNodes();
     std::cout << "...\n\n";
     std::cout << Grid::ToString(grid.allGridNodes) << "\n";
-    std::cout << "GetNumberOfAllAccessableGridNodes: " << grid.GetNumberOfAllAccessableGridNodes() << "\n";
+    // std::cout << "GetNumberOfAllAccessableGridNodes: " << grid.GetNumberOfAllAccessableGridNodes() << "\n";
+    std::cout << "GetNumberOfAllCleanedGridNodes: " << grid.GetNumberOfAllCleanedGridNodes() << "\n";
 
     return EXIT_SUCCESS;
 }
