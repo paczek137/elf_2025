@@ -7,4 +7,4 @@ SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 PROJECT_NAME=$( echo $1 | rev | cut -d'/' -f 2 | rev )
 cd ${SCRIPT_DIR}/${PROJECT_NAME}
 echo ${PROJECT_NAME}
-g++ -std=c++20 -pthread -o ${PROJECT_NAME}.o main.cpp && ./${PROJECT_NAME}.o
+g++ -std=c++23 -pthread -DPARALLEL -o ${PROJECT_NAME}.o main.cpp && ./${PROJECT_NAME}.o
