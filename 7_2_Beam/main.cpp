@@ -43,6 +43,7 @@ struct GridNode
     char symbol;
     size_t x;
     size_t y;
+    long traces = 0;
     GridNode *left = nullptr;
     GridNode *right = nullptr;
     GridNode *up = nullptr;
@@ -101,47 +102,12 @@ struct GridNode
     }
 };
 
-using GridRoute = std::vector<GridNode>;
-
 struct Grid
 {
     std::vector<GridNode> allGridNodes;
-    std::set<GridRoute> gridRoutes;
     size_t height;
     size_t width;
-    long splitsCounter;
     long long routesCounter;
-    size_t lastX = 0;
-
-    void ExamineAllRoutes()
-    {
-        // gridRouteTest.emplace('1', 1, 2);
-        // gridRouteTest.emplace('2', 2, 1);
-        // std::cout << gridRouteTest.size() << "\n";
-        // GridRoute gridRoute1;
-        // GridRoute gridRoute2;
-        // gridRoute1.emplace_back('1', 1, 2);
-        // gridRoute1.emplace_back('2', 2, 1);
-        // gridRoute2.emplace_back('3', 1, 2);
-        // gridRoute2.emplace_back('4', 2, 2);
-        // gridRoutes.emplace(gridRoute1);
-        // gridRoutes.emplace(gridRoute2);
-
-        for (const auto el : this->gridRoutes)
-        {
-            std::cout << boost::algorithm::join(el |
-                            boost::adaptors::transformed([](const GridNode &node)
-                            {
-                                return GridNode::ToStringPosition(node);
-                            }), ", ") << "\n";
-
-        }
-    }
-
-    long GetSplitsCounter() const
-    {
-        return splitsCounter;
-    }
 
     GridNode* GetStartNode()
     {
@@ -153,72 +119,45 @@ struct Grid
         ret = &(*it);
         std::cout << "found start at: (" << ret->x << ", " << ret->y << ")\n";
         return ret;
-        
     }
 
-    void MoveDownward(GridNode* gridNode/*, GridRoute gridRoute*/)
+    void MoveDownward(GridNode* gridNode)
     {
-        // GridRoute gridRouteCopy = gridRoute;
         if (gridNode->down == nullptr)
         {
-            // gridRoutes.emplace(gridRoute);
             this->routesCounter++;
-            // std::cout << "\r   \r" << gridNode->x;
+            gridNode->traces = 1;
             return;
         }
         if (gridNode->down->IsSplitter())
         {
-            if (gridNode->down->left != nullptr)
+            if ((gridNode->down->left->traces != 0) && (gridNode->down->right->traces != 0))
             {
-                // if (gridNode->down->left->IsEmpty())
-                {
-                    // gridNode->down->left->SetBeam();
-                    // this->splitsCounter++;
-                    // gridRoute.emplace_back(*(gridNode->down->left));
-                    // this->MoveDownward(gridNode->down->left, gridRoute);
-                    this->MoveDownward(gridNode->down->left);
-                }
+                this->routesCounter += gridNode->down->left->traces + gridNode->down->right->traces;
+                gridNode->traces = gridNode->down->left->traces + gridNode->down->right->traces;
+                return;
             }
-            if (gridNode->down->right != nullptr)
-            {
-                // size_t lastX = 0;
-                if (gridNode->x > this->lastX)
-                {
-                    this->lastX = gridNode->x;
-                    std::cout << "\n" << gridNode->x << ", " << gridNode->y;
-                }
 
-                // if (gridNode->x > (this->width/2))
-                // if (gridNode->down->right->IsEmpty())
-                {
-                    // gridNode->down->right->SetBeam();
-                    // this->splitsCounter++;
-                    // gridRoute.emplace_back(*(gridNode->down->right));
-                    // this->MoveDownward(gridNode->down->right, gridRoute);
-                    this->MoveDownward(gridNode->down->right);
-                }
-            }
+            this->MoveDownward(gridNode->down->left);
+            this->MoveDownward(gridNode->down->right);
             return;
         }
-        // if (gridNode->down->IsEmpty())
+
+        if (gridNode->down->traces != 0)
         {
-            // gridNode->down->SetBeam();
-            // gridRoute.emplace_back(*(gridNode->down));
-            // this->MoveDownward(gridNode->down, gridRoute);
-            this->MoveDownward(gridNode->down);
+            this->routesCounter += gridNode->down->traces;
+            gridNode->traces = gridNode->down->traces;
+            return;
         }
+        this->MoveDownward(gridNode->down);
     }
 
     void ActivateBeam()
     {
         GridNode* startNode = this->GetStartNode();
-        GridRoute gridRoute{};
-        gridRoute.emplace_back(*startNode);
         std::cout << "\n";
-        // this->MoveDownward(startNode, gridRoute);
         this->MoveDownward(startNode);
-        // std::cout << "\n";
-        // std::cout << this->routesCounter;
+        std::cout << "\n";
     }
 
     void ParseInput(const std::vector<string> &input)
@@ -295,7 +234,7 @@ int main()
     std::filesystem::path cwd = std::filesystem::current_path().filename();
 
     // string filename("../7_1_Beam/example_input"); // 40
-    string filename("../7_1_Beam/input"); // 1646
+    string filename("../7_1_Beam/input"); // 32451134474991
 
     std::vector<std::string> lines{};
     Helper::ParseFile(filename, lines);
@@ -306,11 +245,7 @@ int main()
     std::cout << "Acivating Beam!\n\n";
     grid.ActivateBeam();
     std::cout << Grid::ToString(grid.allGridNodes) << "\n";
-    std::cout << "GetSplitsCounter: " << grid.GetSplitsCounter() << "\n";
-    // grid.ExamineAllRoutes();
     std::cout << "All routes: " << grid.routesCounter << "\n";
-
-    // std::cout << "GetTotalSumOfEquations: " << table.GetTotalSumOfEquations() << "\n";
 
     return EXIT_SUCCESS;
 }
